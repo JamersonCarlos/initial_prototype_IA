@@ -26,24 +26,16 @@ else:
 
 UNIT = 40   # pixels
 MAZE_H = 8  # grid height
-MAZE_W = 7  # grid width
+MAZE_W = 7 * 2 # grid width
 
 # Iniciando aprendizagem com 3 metas no dia, com tempo de 30 minutos
 # values_random = [random.randrange(0, MAZE_H - 1) for i in range(2)]
-values_random = []
 count = 0
-while (count < 2):
-    value_random = random.randint(0, MAZE_H - 1)
-    if(value_random not in values_random): 
-        values_random.append(value_random)
-        count += 1
-    
-print(len(values_random))
 
 class Maze(tk.Tk, object):
     def __init__(self):
         super(Maze, self).__init__()
-        self.action_space = ['u', 'd']
+        self.action_space = ['u', 'd', 'l']
         self.n_actions = len(self.action_space)
         self.title('maze')
         self.geometry('{0}x{1}'.format(MAZE_W * UNIT, MAZE_H * UNIT))
@@ -67,12 +59,14 @@ class Maze(tk.Tk, object):
         self.COUNT = 0   
         self.hells = []
         self.ovals = []
+        self.steps = []
 
         
         # create ovals primary
-        for i in values_random: 
-            self.create_oval(i, 0)
-
+        for i in range(MAZE_H): 
+            for g in range(MAZE_W): 
+                if(g % 2 == 0): 
+                    self.create_oval(i, g)
         
         # create red rect
         self.rect = self.canvas.create_rectangle(
@@ -88,7 +82,8 @@ class Maze(tk.Tk, object):
         time.sleep(0.5)
         self.canvas.delete(self.rect)
         if (new_initial == 0): 
-            origin = np.array([20, 20])
+            origin_initial = np.array([20, 20])
+            origin = origin_initial + np.array([UNIT * 1, UNIT * ((MAZE_H - 1) // 2)])
             self.rect = self.canvas.create_rectangle(
                 origin[0] - 15, origin[1] - 15,
                 origin[0] + 15, origin[1] + 15,
@@ -117,9 +112,9 @@ class Maze(tk.Tk, object):
         # elif action == 2:   # right
         #     if s[0] < (MAZE_W - 1) * UNIT:
         #         base_action[0] += UNIT
-        # elif action == 3:   # left
-        #     if s[0] > UNIT:
-        #         base_action[0] -= UNIT
+        elif action == 2:   # left
+             if s[0] > UNIT:
+                 base_action[0] -= UNIT
 
         self.canvas.move(self.rect, base_action[0], base_action[1])  # move agent
 
@@ -129,11 +124,14 @@ class Maze(tk.Tk, object):
     
 
         # reward function
-        if s_ in [self.canvas.coords(i) for i in self.ovals]:
+        if s_ in [self.canvas.coords(i) for i in self.ovals] and s_ not in self.steps:
             list_arguments = [1, int(s_[0]//40), int(s_[1]//40) + 1]
             horas_float = (360 + ((s_[1]//40) * 30)) / 60
             horas_int = int(horas_float)
             minutos = (horas_float - horas_int) * 60
+            
+            self.steps.append(s_)
+            
             response = input(f"Deseja estudar no horário de {int(horas_int)}:{int(minutos)} (S/N)?").lower()
             self.COUNT += 1
             if response == "s":   
@@ -143,19 +141,26 @@ class Maze(tk.Tk, object):
             else: 
                 reward = -1
                 del self.ovals[[self.canvas.coords(i) for i in self.ovals].index(s_)]
-                self.create_hell(int(s_[1]//40), int(s[0]//40))
+                self.create_hell(int(s_[1]//40), int(s_[0]//40))
                 done = True 
                 s_ = 'terminal'
         elif s_ in [self.canvas.coords(i) for i in self.hells]:
             reward = -1
             done = True
             s_ = 'terminal'
+        elif s_ in self.steps: 
+            reward = 0
+            done = True 
+            s_ = 'terminal'
         else:
             reward = 0
             done = False
-
-        print(self.COUNT)
-        if (self.COUNT < 2): 
+            
+        
+        print("Qtd hells = " + str(len(self.hells)))
+        print("Qtd ovals = " + str(len(self.ovals)))
+            
+        if (self.COUNT < 10): 
             return s_, reward, done, list_arguments, False
         else: 
             self.COUNT = 0
@@ -167,8 +172,9 @@ class Maze(tk.Tk, object):
     
 
     def create_hell(self, linha, coluna, position=-1): 
+        print(f"linha: {linha} coluna: {coluna}")
         origin = np.array([20, 20])
-        hell = origin + np.array([UNIT * coluna, UNIT * linha])
+        hell = origin + np.array([UNIT * (coluna), UNIT * linha])
         self.hells.append(self.canvas.create_rectangle(
             hell[0] - 15, hell[1] - 15,
             hell[0] + 15, hell[1] + 15,
