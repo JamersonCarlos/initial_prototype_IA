@@ -25,6 +25,7 @@ while True:
 
     while True:
         
+
         # RL take action and get next observation and reward
         observation_, reward, done = env.step(action)
 
