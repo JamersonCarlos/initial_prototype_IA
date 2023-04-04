@@ -17,6 +17,7 @@ import numpy as np
 import time
 import sys
 import random
+import os
 if sys.version_info.major == 2:
     import Tkinter as tk
 else:
@@ -28,163 +29,131 @@ UNIT = 40   # pixels
 MAZE_H = 8  # grid height
 MAZE_W = 7 * 2 # grid width
 
-# Iniciando aprendizagem com 3 metas no dia, com tempo de 30 minutos
-# values_random = [random.randrange(0, MAZE_H - 1) for i in range(2)]
-count = 0
 
-class Maze(tk.Tk, object):
+Qtd_horários = 7; #Intervalo de 6 horas ás 9 horas e 30 minutos 
+Qtd_dias = 6 * 2; #Dias de Segunda á Sábado 
+
+#Inicializando matriz
+map = [["-"] * Qtd_dias for i in range(Qtd_horários)]
+
+def preencherMap(): 
+     # create ovals matriz - W 
+        for i in range(Qtd_horários): 
+            for g in range(Qtd_dias): 
+                if (g % 2 == 0): 
+                    map[i][g] = "W"
+
+def initialPositionAgent(): 
+    for i in range(Qtd_horários): 
+        for g in range(Qtd_dias): 
+            if (g == 1 and i == Qtd_horários // 2): 
+                map[i][g] = "O"
+                return g, i
+                
+def viewMap(): 
+    # os.system('cls' if os.name == 'nt' else 'clear')
+    for i in range(Qtd_horários): 
+        for g in range(Qtd_dias): 
+            print(map[i][g], end= " ")
+        print("\n")
+    print("**************************************************************\n\n\n\n\n")
+
+# Iniciando aprendizagem com 3 metas no dia, com tempo de 30 minutos
+
+
+class Maze():
+    
+    
     def __init__(self):
         super(Maze, self).__init__()
         self.action_space = ['u', 'd', 'l']
         self.n_actions = len(self.action_space)
-        self.title('maze')
-        self.geometry('{0}x{1}'.format(MAZE_W * UNIT, MAZE_H * UNIT))
-        self._build_maze()
-
-    def _build_maze(self):
-        self.canvas = tk.Canvas(self, bg='white',
-                           height=MAZE_H * UNIT,
-                           width=MAZE_W * UNIT)
-        origin = np.array([20, 20])
+        preencherMap() 
+        self.i_column, self.i_line = initialPositionAgent()
+        print("column: " + str(self.i_column) + " line: " + str(self.i_line))
+        viewMap()
         
-        # create grids
-        for c in range(0, MAZE_W * UNIT, UNIT):
-            x0, y0, x1, y1 = c, 0, c, MAZE_H * UNIT
-            self.canvas.create_line(x0, y0, x1, y1)
-        for r in range(0, MAZE_H * UNIT, UNIT):
-            x0, y0, x1, y1 = 0, r, MAZE_W * UNIT, r
-            self.canvas.create_line(x0, y0, x1, y1)
-            
-            
-        self.COUNT = 0   
-        self.hells = []
-        self.ovals = []
-        self.steps = []
+        #Armazena o index das linhas acessadas 
+        self.steps_lines = []
+        #Armazena o index das colunas acessadas 
+        self.steps_columns = []
 
-        
-        # create ovals primary
-        for i in range(MAZE_H): 
-            for g in range(MAZE_W): 
-                if(g % 2 == 0): 
-                    self.create_oval(i, g)
-        
-        # create red rect
-        self.rect = self.canvas.create_rectangle(
-            origin[0] - 15, origin[1] - 15,
-            origin[0] + 15, origin[1] + 15,
-            fill='red')
 
-        # pack all
-        self.canvas.pack()
-
-    def reset(self, new_initial=0, coluna=0, linha=0):
-        self.update()
-        time.sleep(0.5)
-        self.canvas.delete(self.rect)
-        if (new_initial == 0): 
-            origin_initial = np.array([20, 20])
-            origin = origin_initial + np.array([UNIT * 1, UNIT * ((MAZE_H - 1) // 2)])
-            self.rect = self.canvas.create_rectangle(
-                origin[0] - 15, origin[1] - 15,
-                origin[0] + 15, origin[1] + 15,
-                fill='red')
-        else: 
-            origin = np.array([20, 20])
-            initial_point = origin + np.array([UNIT * coluna, UNIT * linha])
-            self.rect = self.canvas.create_rectangle(
-                initial_point[0] - 15, initial_point[1] - 15,
-                initial_point[0] + 15, initial_point[1] + 15,
-                fill='red')
-            
-            
-        # return observation
-        return self.canvas.coords(self.rect)
-
-    def step(self, action):
-        s = self.canvas.coords(self.rect)
-        base_action = np.array([0, 0])
-        if action == 0:   # up
-            if s[1] > UNIT:
-                base_action[1] -= UNIT
-        elif action == 1:   # down
-            if s[1] < (MAZE_H - 1) * UNIT:
-                base_action[1] += UNIT
-        # elif action == 2:   # right
-        #     if s[0] < (MAZE_W - 1) * UNIT:
-        #         base_action[0] += UNIT
-        elif action == 2:   # left
-             if s[0] > UNIT:
-                 base_action[0] -= UNIT
-
-        self.canvas.move(self.rect, base_action[0], base_action[1])  # move agent
-
-        s_ = self.canvas.coords(self.rect)  # next state
-
-        list_arguments = []
+    def reset(self):
+        time.sleep(3)
+        return [self.i_column, self.i_line]
     
+    def restart(self): 
+        self.i_column, self.i_line = initialPositionAgent()
+    
+    def step(self, action):
 
-        # reward function
-        if s_ in [self.canvas.coords(i) for i in self.ovals] and s_ not in self.steps:
-            list_arguments = [1, int(s_[0]//40), int(s_[1]//40) + 1]
-            horas_float = (360 + ((s_[1]//40) * 30)) / 60
+        viewMap()
+        
+        if action == 0: 
+            #Move up
+            if self.i_line > 0: 
+                aux = self.i_line
+                self.i_line -= 1
+                map[self.i_line][self.i_column] = "O"
+                map[aux][self.i_column] = "-"
+            
+        elif action == 1:  
+            #Move down
+            if (self.i_line < len(map)): 
+                aux = self.i_line
+                self.i_line += 1
+                map[self.i_line][self.i_column] = "O"
+                map[aux][self.i_column] = "-"
+                
+        elif action == 2: 
+            #Move left
+             if (self.i_column > 0): 
+                 aux = self.i_column
+                 self.i_column -= 1
+                 if(map[self.i_line][self.i_column] == "W" or map[self.i_line][self.i_column] == "B"):
+                    map[self.i_line][self.i_column] += "O"
+                 map[self.i_line][aux] = "-"
+
+        print(f"position actual = column: {self.i_column}, line: {self.i_line}")
+        if map[self.i_line][self.i_column] == "WO" and self.i_line not in self.steps_lines:
+            
+            #Calcula do horário 
+            horas_float = (360 + (self.i_line * 30)) / 60
             horas_int = int(horas_float)
             minutos = (horas_float - horas_int) * 60
-            
-            self.steps.append(s_)
-            
+
+            viewMap()
             response = input(f"Deseja estudar no horário de {int(horas_int)}:{int(minutos)} (S/N)?").lower()
-            self.COUNT += 1
+            
             if response == "s":   
                 reward = 1
+                map[self.i_line][self.i_column] = "W"
                 done = True
                 s_ = 'terminal'
-            else: 
+            elif response == "n": 
                 reward = -1
-                del self.ovals[[self.canvas.coords(i) for i in self.ovals].index(s_)]
-                self.create_hell(int(s_[1]//40), int(s_[0]//40))
+                map[self.i_line][self.i_column] = "B"
                 done = True 
                 s_ = 'terminal'
-        elif s_ in [self.canvas.coords(i) for i in self.hells]:
+            
+            self.steps_lines.append(self.i_line)
+            self.steps_columns.append(self.i_column)
+
+        elif map[self.i_line][self.i_column] == "BO":
             reward = -1
+            map[self.i_line][self.i_column] = "B"
             done = True
             s_ = 'terminal'
-        elif s_ in self.steps: 
+        elif self.i_line in self.steps_lines and self.i_column in self.steps_columns: 
             reward = 0
+            map[self.i_line][self.i_column] = map[self.i_line][self.i_column][0]
             done = True 
             s_ = 'terminal'
         else:
             reward = 0
+            s_ = [self.i_column, self.i_line]
             done = False
-            
         
-        print("Qtd hells = " + str(len(self.hells)))
-        print("Qtd ovals = " + str(len(self.ovals)))
-            
-        if (self.COUNT < 10): 
-            return s_, reward, done, list_arguments, False
-        else: 
-            self.COUNT = 0
-            return s_, reward, done, [], True
+        return s_, reward, done
 
-    def render(self):
-        time.sleep(0.1)
-        self.update()
-    
-
-    def create_hell(self, linha, coluna, position=-1): 
-        print(f"linha: {linha} coluna: {coluna}")
-        origin = np.array([20, 20])
-        hell = origin + np.array([UNIT * (coluna), UNIT * linha])
-        self.hells.append(self.canvas.create_rectangle(
-            hell[0] - 15, hell[1] - 15,
-            hell[0] + 15, hell[1] + 15,
-            fill='black'))
-         
-    def create_oval(self, linha, coluna, position=-1): 
-        origin = np.array([20, 20])
-        oval_center = origin + np.array([UNIT * coluna, UNIT * linha])
-        if (position == -1): 
-            self.ovals.append(self.canvas.create_oval(
-            oval_center[0] - 15, oval_center[1] - 15,
-            oval_center[0] + 15, oval_center[1] + 15,
-            fill='yellow'))

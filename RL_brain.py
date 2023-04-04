@@ -15,7 +15,6 @@ class RL(object):
         self.lr = learning_rate
         self.gamma = reward_decay
         self.epsilon = e_greedy
-
         self.q_table = pd.DataFrame(columns=self.actions, dtype=np.float64)
 
     def check_state_exist(self, state):
