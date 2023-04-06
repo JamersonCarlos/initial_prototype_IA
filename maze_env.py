@@ -18,87 +18,30 @@ import time
 import sys
 import random
 import os
+import pandas as pd
+
+
+
 
 #intervalo de horário - 6:00 ás 10:00 = 4 horas 
-horariosAgenda = ["6:00", "6:30", "7:00", "7:30", "8:00", "8:30", "9:00", "9:30", "10:00"]
-mapHorarios = []
 
-Qtd_horários = (4 * 60) / 30; #Intervalo de 6 horas ás 9 horas e 30 minutos 
-length_colunas = 5 
-length_linhas = 5
-center_index = (length_linhas - 1)/2
-
-#Inicializando matriz
-map = [["-"] * length_colunas for i in range(length_linhas)]
-
-def preencherMap(): 
-    count = 0
-    # create ovals matriz - W 
-    for i in range(length_linhas): 
-        for g in range(length_colunas): 
-            if (g % 2 == 0 and i == 0):
-                print("linha superior")
-                map[i][g] = "W"
-                mapHorarios.append({"hora": horariosAgenda[count], "i_line": i, "i_column": g}) 
-                count += 1
-    for i in range(length_linhas): 
-        for g in range(length_colunas): 
-            if (g == length_colunas - 1 and i % 2 == 0 and i != 0 and i != length_linhas - 1): 
-                print("linha right")
-                map[i][g] = "W"
-                mapHorarios.append({"hora": horariosAgenda[count], "i_line": i, "i_column": g})
-                count += 1 
-    for i in range(length_linhas): 
-        for g in range(length_colunas): 
-            if (i == len(map) - 1 and g % 2 == 0) :
-                print("linha inferior")
-                map[i][g] = "W"
-                mapHorarios.append({"hora": horariosAgenda[count], "i_line": i, "i_column": g})
-                count += 1
-    for i in range(length_linhas): 
-        for g in range(length_colunas): 
-            if (g == 0 and i % 2 == 0 and i != 0 and i != length_linhas - 1): 
-                print("linha left")
-                map[i][g] = "W" 
-                mapHorarios.append({"hora": horariosAgenda[count], "i_line": i, "i_column": g})
-                count += 1
-                
-    print(mapHorarios)
-                           
-
-def initialPositionAgent(): 
-    for i in range(length_linhas): 
-        for g in range(length_colunas): 
-            if (g == center_index and i == center_index): 
-                map[i][g] = "O"
-                return g, i
-            
-def search_horario(i_line, i_column): 
-    for i in range(len(mapHorarios)): 
-        if mapHorarios[i]['i_line'] == i_line and mapHorarios[i]['i_column'] == i_column: 
-            return mapHorarios[i]["hora"]
-                
-def viewMap(): 
-    # os.system('cls' if os.name == 'nt' else 'clear')
-    for i in range(length_linhas): 
-        for g in range(length_colunas): 
-            print(map[i][g], end= " ")
-        print("\n")
 
 # Iniciando aprendizagem com 3 metas no dia, com tempo de 30 minutos
-
-
 class Maze():
     
-    
-    def __init__(self):
+    def __init__(self, lengthMap, possiveisHorarios):
         super(Maze, self).__init__()
-        self.action_space = ['u', 'd', 'l', 'r']
+        self.action_space = ['u', 'd', 'l', 'r', 'tl', 'tr', 'bl', 'br']
         self.n_actions = len(self.action_space)
-        preencherMap() 
-        self.i_column, self.i_line = initialPositionAgent()
-        print("column: " + str(self.i_column) + " line: " + str(self.i_line))
-        viewMap()
+        self.length_linhas = lengthMap
+        self.length_colunas = lengthMap
+        self.horariosAgenda = possiveisHorarios
+        self.horariosAgendados = []
+        self.mapHorarios = []
+        self.map =  [["-"] * self.length_colunas for i in range(self.length_linhas)]
+        self.preencherMap()
+        self.i_column, self.i_line = self.initialPositionAgent()
+
         
         #Armazena o index das linhas acessadas 
         self.steps_lines = []
@@ -107,94 +50,255 @@ class Maze():
 
 
     def reset(self):
-        time.sleep(0.5)
+        time.sleep(0.2)
         return [self.i_column, self.i_line]
     
     def restart(self): 
-        self.i_column, self.i_line = initialPositionAgent()
+        self.i_column, self.i_line = self.initialPositionAgent()
     
+    #Movimentação do Agente
     def step(self, action):
-
-        
-        
         if action == 0: 
             #Move up
             if self.i_line > 0: 
                 aux = self.i_line
                 self.i_line -= 1
-                if(map[self.i_line][self.i_column] == "W" or map[self.i_line][self.i_column] == "B"):
-                    map[self.i_line][self.i_column] += "O"
-                map[aux][self.i_column] = "-"
+                if(self.map[self.i_line][self.i_column] == "W" or self.map[self.i_line][self.i_column] == "B"):
+                    self.map[self.i_line][self.i_column] += "O"
+                self.map[aux][self.i_column] = self.checkState(aux, self.i_column)
             
         elif action == 1:  
             #Move down
-            if (self.i_line < length_linhas - 1): 
+            if (self.i_line < self.length_linhas - 1): 
                 aux = self.i_line
                 self.i_line += 1
-                if(map[self.i_line][self.i_column] == "W" or map[self.i_line][self.i_column] == "B"):
-                    map[self.i_line][self.i_column] += "O"
-                map[aux][self.i_column] = "-"
+                if(self.map[self.i_line][self.i_column] == "W" or self.map[self.i_line][self.i_column] == "B"):
+                    self.map[self.i_line][self.i_column] += "O"
+                self.map[aux][self.i_column] = self.checkState(aux, self.i_column)
                 
         elif action == 2: 
             #Move left
              if (self.i_column > 0): 
                  aux = self.i_column
                  self.i_column -= 1
-                 if(map[self.i_line][self.i_column] == "W" or map[self.i_line][self.i_column] == "B"):
-                    map[self.i_line][self.i_column] += "O"
-                 map[self.i_line][aux] = "-"
+                 if(self.map[self.i_line][self.i_column] == "W" or self.map[self.i_line][self.i_column] == "B"):
+                    self.map[self.i_line][self.i_column] += "O"
+                 self.map[self.i_line][aux] = self.checkState(self.i_line, aux)
                  
         elif action == 3: 
             #Move right
-             if (self.i_column < length_colunas - 1): 
+             if (self.i_column < self.length_colunas - 1): 
                  aux = self.i_column
                  self.i_column += 1
-                 if(map[self.i_line][self.i_column] == "W" or map[self.i_line][self.i_column] == "B"):
-                    map[self.i_line][self.i_column] += "O"
-                 map[self.i_line][aux] = "-"
-
-        print(f"position actual = column: {self.i_column}, line: {self.i_line}")
-        viewMap()
+                 if(self.map[self.i_line][self.i_column] == "W" or self.map[self.i_line][self.i_column] == "B"):
+                    self.map[self.i_line][self.i_column] += "O"
+                 self.map[self.i_line][aux] = self.checkState(self.i_line, aux)
+                 
+        elif action == 4: 
         
-        if map[self.i_line][self.i_column] == "WO":
+            #Move top left
+            if (self.i_column > 0 and self.i_line > 0): 
+                 aux_column = self.i_column
+                 aux_line = self.i_line
+                 self.i_column -= 1
+                 self.i_line -= 1
+                 if(self.map[self.i_line][self.i_column] == "W" or self.map[self.i_line][self.i_column] == "B"):
+                    self.map[self.i_line][self.i_column] += "O" 
+                 self.map[aux_line][aux_column] = self.checkState(aux_line, aux_column)
+                 
+                
+        elif action == 5: 
+        
+            #Move top right
+            if (self.i_column < self.length_colunas - 1 and self.i_line > 0): 
+                 aux_column = self.i_column
+                 aux_line = self.i_line
+                 self.i_column += 1
+                 self.i_line -= 1
+                 if(self.map[self.i_line][self.i_column] == "W" or self.map[self.i_line][self.i_column] == "B"):
+                    self.map[self.i_line][self.i_column] += "O"
+                 self.map[aux_line][aux_column] = self.checkState(aux_line, aux_column)
+        
+        elif action == 6: 
+        
+            #Move bottom left
+            if (self.i_line > self.length_linhas - 1 and self.i_column > 0): 
+                 aux_column = self.i_column
+                 aux_line = self.i_line
+                 self.i_column -= 1
+                 self.i_line += 1
+                 if(self.map[self.i_line][self.i_column] == "W" or self.map[self.i_line][self.i_column] == "B"):
+                    self.map[self.i_line][self.i_column] += "O"
+                 self.map[aux_line][aux_column] = self.checkState(aux_line, aux_column)
+                 
+        elif action == 7: 
+        
+            #Move top left
+            if (self.i_column < self.length_colunas - 1 > 0 and self.i_line < self.length_linhas - 1): 
+                 aux_column = self.i_column
+                 aux_line = self.i_line
+                 self.i_column += 1
+                 self.i_line += 1
+                 if(self.map[self.i_line][self.i_column] == "W" or self.map[self.i_line][self.i_column] == "B"):
+                    self.map[self.i_line][self.i_column] += "O"
+                 self.map[aux_line][aux_column] = self.checkState(aux_line, aux_column)
+  
+
+        
+        resultCheck = False
+        for value in self.horariosAgendados: 
+            if (value["i_line"] == self.i_line and value["i_column"] == self.i_column): 
+                resultCheck = True 
+      
+                
+        if self.map[self.i_line][self.i_column] == "WO" and not resultCheck:
             
-         
-            response = input(f"Deseja estudar no horário de {search_horario(self.i_line, self.i_column)} (S/N)?").lower()
+            self.horariosAgendados.append(self.search_horario(self.i_line, self.i_column, returnHora=False)) 
+            # response = input(f"Deseja estudar no horário de {self.search_horario(self.i_line, self.i_column)} (S/N)?").lower()
             
-            if response == "s":   
-                reward = 1
-                map[self.i_line][self.i_column] = "W"
-                done = True
-                s_ = 'terminal'
-            elif response == "n": 
-                reward = -1
-                map[self.i_line][self.i_column] = "B"
-                done = True 
-                s_ = 'terminal'
+            # if response == "s":   
+            #     reward = 1
+            #     self.map[self.i_line][self.i_column] = "W"
+            #     done = True
+            #     s_ = 'terminal'
+            # elif response == "n": 
+            #     reward = -1
+            #     self.map[self.i_line][self.i_column] = "B"
+            #     done = True 
+            #     s_ = 'terminal'
+            
+            horario = self.search_horario(self.i_line, self.i_column)
+            reward = 0
+            self.map[self.i_line][self.i_column] = "W"
+            done = True
+            s_ = 'terminal'
             
             self.steps_lines.append(self.i_line)
             self.steps_columns.append(self.i_column)
 
-        elif map[self.i_line][self.i_column] == "BO":
+        elif self.map[self.i_line][self.i_column] == "BO" and not resultCheck:
             
-             
-            response = input(f"Deseja estudar no horário de {search_horario(self.i_line, self.i_column)} (S/N)?").lower()
+            self.horariosAgendados.append(self.search_horario(self.i_line, self.i_column, returnHora=False)) 
+            # response = input(f"Deseja estudar no horário de {self.search_horario(self.i_line, self.i_column)} (S/N)?").lower()
             
-            if response == "s":   
-                reward = 2
-                map[self.i_line][self.i_column] = "W"
-                done = True
-                s_ = 'terminal'
-            elif response == "n": 
-                reward = -2
-                map[self.i_line][self.i_column] = "B"
-                done = True 
-                s_ = 'terminal'
+            # if response == "s":   
+            #     reward = 2
+            #     self.map[self.i_line][self.i_column] = "W"
+            #     done = True
+            #     s_ = 'terminal'
+            # elif response == "n": 
+            #     reward = -2
+            #     self.map[self.i_line][self.i_column] = "B"
+            #     done = True 
+            #     s_ = 'terminal'
+        
+            horario = self.search_horario(self.i_line, self.i_column)
+            reward = 0
+            self.map[self.i_line][self.i_column] = "W"
+            done = True
+            s_ = 'terminal'
+                
+        elif self.map[self.i_line][self.i_column] == "BO" and resultCheck: 
+            horario = 0
+            reward = 0 
+            self.map[self.i_line][self.i_column] = "B"   
+            done = False
+            s_ = 'terminal'
+
+        elif self.map[self.i_line][self.i_column] == "WO" and resultCheck: 
+            horario = 0
+            reward = 0 
+            self.map[self.i_line][self.i_column] = "W"
+            done = False
+            s_ = 'terminal'
+                
                 
         else:
+            horario = 0
             reward = 0
             s_ = [self.i_column, self.i_line]
             done = False
         
-        return s_, reward, done
-
+        return s_, reward, done, horario
+    
+    
+    def preencherMap(self): 
+        count = 0
+        # create ovals matriz - W 
+        for i in range(self.length_linhas): 
+            for g in range(self.length_colunas): 
+                if (g % 2 == 0 and i == 0):
+                    if (count < len(self.horariosAgenda)): 
+                        
+                        self.map[i][g] = "W"
+                        self.mapHorarios.append({"hora": self.horariosAgenda[count], "i_line": i, "i_column": g}) 
+                        count += 1 
+                    else: 
+                        break
+        for i in range(self.length_linhas): 
+            for g in range(self.length_colunas): 
+                if (g == self.length_colunas - 1 and i % 2 == 0 and i != 0 and i != self.length_linhas - 1): 
+                    if (count < len(self.horariosAgenda)): 
+                   
+                        self.map[i][g] = "W"
+                        self.mapHorarios.append({"hora": self.horariosAgenda[count], "i_line": i, "i_column": g})
+                        count += 1 
+                    else: 
+                        break
+        for i in range(self.length_linhas): 
+            for g in range(self.length_colunas): 
+                if (i == len(self.map) - 1 and g % 2 == 0) :
+                    if (count < len(self.horariosAgenda)): 
+                      
+                        self.map[i][g] = "W"
+                        self.mapHorarios.append({"hora": self.horariosAgenda[count], "i_line": i, "i_column": g})
+                        count += 1
+                    else : 
+                        break
+        for i in range(self.length_linhas): 
+            for g in range(self.length_colunas): 
+                if (g == 0 and i % 2 == 0 and i != 0 and i != self.length_linhas - 1): 
+                    if (count < len(self.horariosAgenda)): 
+                       
+                        self.map[i][g] = "W" 
+                        self.mapHorarios.append({"hora": self.horariosAgenda[count], "i_line": i, "i_column": g})
+                        count += 1 
+                    else: 
+                        break
+                    
+    def initialPositionAgent(self): 
+        center_index =  ( self.length_colunas - 1 )// 2 
+        for i in range(self.length_linhas): 
+            for g in range(self.length_colunas): 
+                if (g == center_index and i == center_index): 
+                    self.map[i][g] = "O"
+                    return g, i
+                
+    def viewMap(self): 
+        os.system('cls' if os.name == 'nt' else 'clear')
+        for i in range(self.length_linhas): 
+            for g in range(self.length_colunas): 
+                print(self.map[i][g], end= " ")
+            print("\n")
+    
+    def checkAgenda(self,line, column):
+        for value in self.horariosAgendados: 
+            if (value["i_line"] == line and value["i_column"] == column): 
+                return True 
+            return False
+        
+    def checkState(self,line, column): 
+        if self.map[line][column] == "W": 
+            return "W"
+        elif self.map[line][column] == "B": 
+            return "O"
+        else: 
+            return "-"
+    
+    def search_horario(self, i_line, i_column, returnHora = True): 
+        for i in range(len(self.mapHorarios)): 
+            if self.mapHorarios[i]['i_line'] == i_line and self.mapHorarios[i]['i_column'] == i_column: 
+                if (returnHora): 
+                    return self.mapHorarios[i]["hora"]
+                return self.mapHorarios[i]
+            

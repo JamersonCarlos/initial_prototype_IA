@@ -10,12 +10,16 @@ import pandas as pd
 
 
 class RL(object):
-    def __init__(self, action_space, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9):
+    def __init__(self, action_space, datafram=[], learning_rate=0.01, reward_decay=0.9, e_greedy=0.9):
         self.actions = action_space  # a list
         self.lr = learning_rate
         self.gamma = reward_decay
         self.epsilon = e_greedy
-        self.q_table = pd.DataFrame(columns=self.actions, dtype=np.float64)
+        if datafram == []: 
+            self.q_table = pd.DataFrame(columns=self.actions, dtype=np.float64)
+        else: 
+            self.q_table = pd.DataFrame(data=datafram, dtype=np.float64)
+    
 
     def check_state_exist(self, state):
         if state not in self.q_table.index:
@@ -63,8 +67,8 @@ class QLearningTable(RL):
 # on-policy
 class SarsaTable(RL):
 
-    def __init__(self, actions, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9):
-        super(SarsaTable, self).__init__(actions, learning_rate, reward_decay, e_greedy)
+    def __init__(self, actions, datafraim, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9):
+        super(SarsaTable, self).__init__(actions, datafraim, learning_rate, reward_decay, e_greedy)
 
     def learn(self, s, a, r, s_, a_):
         self.check_state_exist(s_)
