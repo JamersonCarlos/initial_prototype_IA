@@ -27,34 +27,32 @@ cred = credentials.Certificate('./studyup-584d3-firebase-adminsdk-2gkiq-c2b31ee3
 firebase_admin.initialize_app(credential=cred)
 db = firestore.client()
 
+uid = '4hxFrIxLzDdCzf4AdtcZ5nCazha2'
+
 
 possiveisQTable = [i for i in range(50) if i % 2 != 0 and i >= 5]
 capacidadeQTable = [value for value in range(8, 48 + 1, 4)]
 request = db.collection(u'users').stream()
 listUsers = [[doc.id, doc.to_dict()] for doc in request]
 
-
-difHoras = [(datetime.strptime(listUsers[0][1]["horários_livres"][i]["end"], "%H:%M") - datetime.strptime(listUsers[0][1]["horários_livres"][i]["start"], "%H:%M")).total_seconds()/(60) for i in range(len(listUsers[0][1]["horários_livres"]))]
-QtdIntervalosPossiveis = [(value//30) for value in difHoras]
+#Inicio do dia ás 8:00 da manhã e termino do dia ás 22:00
+difHoras = [(datetime.strptime("8:00", "%H:%M") - datetime.strptime("22:00", "%H:%M")).total_seconds()/(60) for i in range(7)]
+QtdIntervalosPossiveis = [(value//60) for value in difHoras]
 lengthMap = []
 possiveisHorarios = []
-for v in QtdIntervalosPossiveis: 
-    for i in range(len(capacidadeQTable)): 
-        if (v <= capacidadeQTable[i]): 
-            lengthMap.append(capacidadeQTable[i])
-            break
 
 for i in range(7): 
-    horaInicio = int(datetime.strptime(listUsers[0][1]["horários_livres"][i]["start"], "%H:%M").hour) * 60 + int(datetime.strptime(listUsers[0][1]["horários_livres"][i]["start"], "%H:%M").minute)
-    horaFinal = int(datetime.strptime(listUsers[0][1]["horários_livres"][i]["end"], "%H:%M").hour) * 60 + int(datetime.strptime(listUsers[0][1]["horários_livres"][i]["end"], "%H:%M").minute)
-    possiveisHorarios.append([returnStringHorario(minutos=value) for value in range(horaInicio, horaFinal, 30)])    
+    horaInicioMinutos = datetime.strptime("8:00", "%H:%M").hour * 60 
+    horaFinalMinutos = datetime.strptime("22:00", "%H:%M").hour * 60 
+    possiveisHorarios.append([returnStringHorario(minutos=value) for value in range(horaInicioMinutos, horaFinalMinutos, 60)])    
 
 interfaces = []
 
 for i in range(7): 
-    interfaces.append(Maze(lengthMap=lengthMap[i], possiveisHorarios=possiveisHorarios[i]))
+    interfaces.append(Maze(lengthMap=9, possiveisHorarios=possiveisHorarios[i]))
+    
 qTables = [SarsaTable(actions=list(range(interfaces[i].n_actions)), datafraim=[]) for i in range(len(interfaces))]
-metasSemana = []
+metasSemana = [] 
 QTableSemana = []
 
 
@@ -63,7 +61,7 @@ for i in range(7):
     env = interfaces[i]
     RL = qTables[i]
     
-    for v in range(3):
+    for v in range(6):
         observation = env.reset()    
         
         # RL choose action based on observation
@@ -91,16 +89,16 @@ for i in range(7):
                 saveAction = ast.literal_eval(str(saveAction))
                 action = ast.literal_eval(str(action))
                 metasSemana.append({"dia": i, "horario_meta": horaAgendada, "recompensa": reward, "action_back": saveAction, "action_next": action, "observation_back": saveObservation, "observation_next": observation})
-                QTableSemana.append(str({"dia": i, "DataQTable": RL.q_table.values.tolist()}))
+                QTableSemana.append({"dia": i, "DataQTable": str(RL.q_table.values.tolist())})
                 break    
         env.restart()
     
 
-db.collection(u'users').document(u'yqEenvOBLDPwiX1bwRY8KpfMMmQ2').set({
+db.collection(u'users').document(uid).set({
     u'metas': metasSemana
 }, merge=True)
 
-db.collection(u'users').document(u'yqEenvOBLDPwiX1bwRY8KpfMMmQ2').set({
+db.collection(u'users').document(uid).set({
     u'QTableIA': QTableSemana
 }, merge=True)
 
