@@ -19,6 +19,7 @@ cred = credentials.Certificate('./studyup-584d3-firebase-adminsdk-2gkiq-c2b31ee3
 firebase_admin.initialize_app(credential=cred)
 db = firestore.client()
 
+#Primeira Definição de metas para novos usuários 
 def FirstUpdate(uid): 
     possiveisHorarios = []
 
@@ -29,7 +30,8 @@ def FirstUpdate(uid):
 
     interfaces = []
 
-    
+    for i in range(7): 
+        interfaces.append(Maze(lengthMap=9, possiveisHorarios=possiveisHorarios[i]))
         
     qTables = [SarsaTable(actions=list(range(interfaces[i].n_actions)), datafraim=[]) for i in range(len(interfaces))]
     metasSemana = [] 
@@ -68,8 +70,8 @@ def FirstUpdate(uid):
                 if done:
                     saveAction = ast.literal_eval(str(saveAction))
                     action = ast.literal_eval(str(action))
-                    metasSemana.append({"dia": i, "horario_meta": horaAgendada, "recompensa": reward, "action_back": saveAction, "action_next": action, "observation_back": saveObservation, "observation_next": observation, "disciplina": ""})
-                    QTableSemana.append(str({"dia": i, "DataQTable": RL.q_table.values.tolist()}))
+                    metasSemana.append({"dia": i, "horario_meta": horaAgendada, "recompensa": -2, "action_back": saveAction, "action_next": action, "observation_back": saveObservation, "observation_next": observation, "disciplina": ""})
+                    QTableSemana.append({"dia": i, "DataQTable": str(RL.q_table.values.tolist())})
                     break    
             env.restart()
         
@@ -82,8 +84,10 @@ def FirstUpdate(uid):
         u'QTableIA': QTableSemana
     }, merge=True)
 
+    print("success")
 
-def updateAll(uid):     
+#Atualização das metas de um usuário(uid)
+def updateMetaUser(uid):     
     request = db.collection(u'users').document(uid).get().to_dict()
     diasSemana = [ast.literal_eval(value["DataQTable"]) for value in request["QTableIA"]]
     mapRecompensas = [value for value in request["metas"]]
@@ -152,7 +156,7 @@ def updateAll(uid):
                 if done:
                     saveAction = ast.literal_eval(str(saveAction))
                     action = ast.literal_eval(str(action))
-                    metasSemana.append({"dia": i, "horario_meta": horaAgendada, "recompensa": reward, "action_back": saveAction, "action_next": action, "observation_back": saveObservation, "observation_next": observation})
+                    metasSemana.append({"dia": i, "horario_meta": horaAgendada, "recompensa": -2, "action_back": saveAction, "action_next": action, "observation_back": saveObservation, "observation_next": observation, "disciplina": ""})
                     QTableSemana.append({"dia": i, "DataQTable": str(RL.q_table.values.tolist())})
                     break    
             env.restart()
@@ -166,4 +170,18 @@ def updateAll(uid):
         u'QTableIA': QTableSemana
     }, merge=True)
 
-updateAll('4hxFrIxLzDdCzf4AdtcZ5nCazha2')
+
+def updateAllUsers():
+    request = db.collection(u'users').stream()
+    listUsers = [doc.id for doc in request]
+    for user in listUsers: 
+        updateMetaUser(user)
+    
+def alocarDisciplina():         
+    pass 
+
+def deleteDisciplina(): 
+    pass
+
+def agendarNotifications(): 
+    pass
