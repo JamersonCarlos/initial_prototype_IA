@@ -170,16 +170,18 @@ def updateMetaUser(uid):
         u'QTableIA': QTableSemana
     }, merge=True)
 
+
 def updateAllUsers():
     request = db.collection(u'users').stream()
     listUsers = [doc.id for doc in request]
     for user in listUsers: 
         updateMetaUser(user)
     
-def alocarDisciplina():
-         
+def alocarDisciplina():         
     pass 
 
 def deleteDisciplina(): 
     pass
-FirstUpdate('4hxFrIxLzDdCzf4AdtcZ5nCazha2')
+
+def agendarNotifications(): 
+    pass
