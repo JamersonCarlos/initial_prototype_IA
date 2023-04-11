@@ -1,4 +1,5 @@
 import ast
+import random
 from maze_env import Maze
 from RL_brain import SarsaTable
 import time
@@ -176,12 +177,43 @@ def updateAllUsers():
     listUsers = [doc.id for doc in request]
     for user in listUsers: 
         updateMetaUser(user)
+
+#Aloca disciplina tendo em vista a quantidade de horas por semana para dedicação
+def alocarDisciplina(uid):         
+    request = db.collection(u'users').stream()
+    listUsers = [[doc.id, doc.to_dict()] for doc in request]
     
-def alocarDisciplina():         
-    pass 
+    for user in listUsers: 
+        if user[0] == uid:
+            titleSubjects = [subject["title"] for subject in user[1]["disciplinas"]]
+            weightSubjects = [(subject["horas_dedicadas_por_semana"]/50) * 100 for subject in user[1]["disciplinas"]]
+            if len(titleSubjects) == 0 or len(titleSubjects) == 1: 
+                randomList = random.choices(titleSubjects, weights=weightSubjects, k= 21)
+                for k in range(7): 
+                    count = 0
+                    for i in range(len(user[1]["metas"])): 
+                        if user[1]["metas"][i]["dia"] == k and count < 3: 
+                            user[1]["metas"][i]["disciplina"] = randomList[i]
+                            count += 1
+            else: 
+                randomList = random.choices(titleSubjects, weights=weightSubjects, k= 42)
+                print(randomList)
+                for k in range(7): 
+                    count = 0
+                    for i in range(len(user[1]["metas"])): 
+                        if user[1]["metas"][i]["dia"] == k and count < 6: 
+                            user[1]["metas"][i]["disciplina"] = randomList[i]
+                            count += 1
+            
+            db.collection(u'users').document(user[0]).set({ 
+                u'metas': user[1]["metas"]
+            }, merge=True)
+        
 
 def deleteDisciplina(): 
     pass
 
 def agendarNotifications(): 
     pass
+
+alocarDisciplina('yqEenvOBLDPwiX1bwRY8KpfMMmQ2')
