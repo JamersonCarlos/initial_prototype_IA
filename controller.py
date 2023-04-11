@@ -1,31 +1,19 @@
-from sqlite_db import SqliteDB
-from flask import Flask, jsonify, request
+from flask import Flask, request
 import app as IA
 
 app = Flask(__name__)
-bd = SqliteDB()  # instanciando a classe SqliteDB
 
-
-
-@app.route('firstLogin/<id>')
-def primerioLogin():   
+@app.route('firstLogin/<uid>')
+def primerioLogin(uid):
+    IA.FirstUpdate(uid)   
     return 'chamar alocação para criar o objeto de metas'
 
 
-
-#@app.route('/cadastrarUser/<idUser>', methods=['POST','GET']) #talvez não precise# 
-#def add_novo_user(idUser, id_notification):
-#    res = bd.casdastrar_novo_user(idUser, id_notification)
-#    if res:
-#        return 'Usuário cadastrado com sucesso',204
-#    return 'Não foi possivel cadastrar este usuario', 404
-
-
-
-@app.route('deletedisciplina/<id>/<disciplina>') #vai pagar o objeto disciplina e remover o nome das metas #
+@app.route('deletedisciplina/<id>/<disciplina>',methods=['POST']) #vai pagar o objeto disciplina e remover o nome das metas #
 def deletedisciplina(id,disciplina):
-    AI.deletedisciplina(id,disciplina)
+    IA.deleteDisciplina(id,disciplina)
     return '',200
+
 
 @app.route('updatePriorit/<id>')
 def updatepriorit(id):

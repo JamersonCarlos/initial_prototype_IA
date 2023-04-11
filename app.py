@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import firebase_admin
 from firebase_admin import firestore
-from firebase_admin import credentials
+from firebase_admin import credentials, messaging
 from datetime import datetime
 import json
 
@@ -210,10 +210,9 @@ def alocarDisciplina(uid):
             }, merge=True)
         
 
-def deleteDisciplina(): 
-    pass
-
-def agendarNotifications(): 
-    pass
+def deleteDisciplina(id,disciplina): 
+    request = db.collection(u'users').document(id).where(u'disciplinas', u'==', disciplina).detele()
+    print(f"disiplina deletada: "+{request})
+    return request
 
 alocarDisciplina('yqEenvOBLDPwiX1bwRY8KpfMMmQ2')
