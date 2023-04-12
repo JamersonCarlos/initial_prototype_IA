@@ -189,7 +189,7 @@ def updateMetaUser(uid):
             env.restart()
             
         dataInicio = dataInicio + timedelta(1)
-        
+
 
     db.collection(u'users').document(uid).set({
         u'metas': metasSemana
