@@ -209,9 +209,18 @@ def updateAllUsers():
 def alocarDisciplina(uid):         
     #Pega todos os usuários do banco de dados 
     request = db.collection(u'users').stream()
-    user = [[doc.id, doc.to_dict()] for doc in request if doc.id == uid]
+    user = [[doc.id, doc.to_dict()] for doc in request if doc.id == "yqEenvOBLDPwiX1bwRY8KpfMMmQ2"]
     titleSubjects = [subject["title"] for subject in user[0][1]["disciplinas"]]
-    weightSubjects = [(subject["horas_dedicadas_por_semana"]/50) * 100 for subject in user[0][1]["disciplinas"]]
+    # weightSubjects = [(subject["horas_dedicadas_por_semana"]/50) * 100 for subject in user[0][1]["disciplinas"] ]
+    weightSubjects = []
+    for k in range(len(user[0][1]["disciplinas"]), 0, -1): 
+        prioriti = (k/len(user[0][1]["disciplinas"])) * 100
+        if (prioriti == 100): 
+            prioriti = 80 
+        if (prioriti > 80): 
+            prioriti = prioriti - (prioriti - 80) - 2
+        weightSubjects.append(prioriti)
+    
     #Em caso de 1 Disciplina cadastrada 
     if len(titleSubjects) == 1: 
         randomList = random.choices(titleSubjects, weights=weightSubjects, k= 21)
@@ -241,8 +250,4 @@ def alocarDisciplina(uid):
     db.collection(u'users').document(user[0][0]).set({ 
         u'metas': user[0][1]["metas"]
     }, merge=True)
-
-
-def agendarNotifications(): 
-    pass
 
