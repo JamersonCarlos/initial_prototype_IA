@@ -14,6 +14,7 @@ from firebase_admin import messaging
 from datetime import datetime
 import json
 from datetime import timedelta, date
+import threading
 
 
 #Convert minutos em horas 
@@ -250,4 +251,6 @@ def alocarDisciplina(uid):
     db.collection(u'users').document(user[0][0]).set({ 
         u'metas': user[0][1]["metas"]
     }, merge=True)
+
+
 
