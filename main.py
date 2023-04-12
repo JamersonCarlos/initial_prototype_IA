@@ -15,6 +15,7 @@ from datetime import datetime
 import json
 from datetime import timedelta, date
 import threading
+from notification_serve import notification_serve as msg
 
 
 #Convert minutos em horas 
@@ -251,6 +252,34 @@ def alocarDisciplina(uid):
     db.collection(u'users').document(user[0][0]).set({ 
         u'metas': user[0][1]["metas"]
     }, merge=True)
+
+
+
+
+def send_notification(id):
+    request = db.collection(u'users').document(id).get().to_dict()['metas']
+    id_notification = db.collection(u'users').document(id).get().to_dict()['TokenMessaging']
+    print(id_notification)
+    datasUser = [value["dataMeta"] for value in request]
+    horasUser = [value["horario_meta"] for value in request]
+    datas_fomarted = merge_data_with_hrs(datasUser=datasUser,horasUser=horasUser)
+    for i in range(len(datas_fomarted)):                                    
+        response_meg = msg().agendarNotifications(uid_message=id_notification, horario=datas_fomarted[i], disciplina='request[i]["disciplina"]')
+        # print(response_meg)
+    
+    # print(response_meg) 
+    return     
+   
+        
+def merge_data_with_hrs(datasUser,horasUser): 
+    datetime_object = []
+    for i in range(len(horasUser)):
+        data = datasUser[i]+"-"+horasUser[i]
+        datetime_object.append(datetime.strptime(data, '%Y-%m-%d-%H:%M'))
+        
+    return datetime_object
+
+
 
 
 
