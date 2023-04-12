@@ -27,7 +27,7 @@ cred = credentials.Certificate('./studyup-584d3-firebase-adminsdk-2gkiq-c2b31ee3
 firebase_admin.initialize_app(credential=cred)
 db = firestore.client()
 
-uid = '4hxFrIxLzDdCzf4AdtcZ5nCazha2'
+uid = 'yqEenvOBLDPwiX1bwRY8KpfMMmQ2'
 
 
 possiveisQTable = [i for i in range(50) if i % 2 != 0 and i >= 5]
