@@ -2,8 +2,11 @@ from datetime import datetime, timedelta
 from flask import Flask, request
 import main as IA
 from notification_serve import notification_serve as msg
+import refreashIA as refreash
 
 app = Flask(__name__)
+
+refreash.start_thread(IA.updateAllUsers)  #atualiza base de dados toda segunda #
 
 @app.route('/firstLogin/<uid>')
 def primerioLogin(uid):
@@ -23,4 +26,5 @@ def sendnotificaion(id):
 
 if __name__ == "__main__":
     app.run(host="192.168.0.106 ", port=8000)
+
 
