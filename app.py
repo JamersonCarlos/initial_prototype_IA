@@ -1,5 +1,7 @@
+from datetime import datetime, timedelta
 from flask import Flask, request
 import main as IA
+from notification_serve import notification_serve as msg
 
 app = Flask(__name__)
 
@@ -12,6 +14,11 @@ def primerioLogin(uid):
 def updatepriorit(id):
     IA.alocarDisciplina(id)
     return '',200
+
+@app.route('/sendnotificaion/<id>')
+def sendnotificaion(id):
+    msg.agendarNotifications(horario=datetime.now()+timedelta(seconds=10),uid_message='yqEenvOBLDPwiX1bwRY8KpfMMmQ2')
+    return 'sua menssagem veio da ia',200
 
 
 if __name__ == "__main__":

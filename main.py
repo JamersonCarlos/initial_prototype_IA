@@ -264,10 +264,8 @@ def send_notification(id):
     horasUser = [value["horario_meta"] for value in request]
     datas_fomarted = merge_data_with_hrs(datasUser=datasUser,horasUser=horasUser)
     for i in range(len(datas_fomarted)):                                    
-        response_meg = msg().agendarNotifications(uid_message=id_notification, horario=datas_fomarted[i], disciplina='request[i]["disciplina"]')
-        # print(response_meg)
-    
-    # print(response_meg) 
+        msg().agendarNotifications(uid_message=id_notification, horario=datas_fomarted[i])
+
     return     
    
         

@@ -2,7 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+.idea/
 # C extensions
 *.so
 
@@ -120,7 +120,7 @@ ENV/
 env.bak/
 venv.bak/
 studyup-584d3-firebase-adminsdk-2gkiq-c2b31ee3b3.json
-
+.vscode/
 # Spyder project settings
 .spyderproject
 .spyproject
