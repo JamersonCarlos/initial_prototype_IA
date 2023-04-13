@@ -279,7 +279,10 @@ def merge_data_with_hrs(datasUser,horasUser):
 
 
 
-
+def sendMensageTeste(id):
+    id_notification = db.collection(u'users').document(id).get().to_dict()['TokenMessaging']
+    msg().agendarNotifications(uid_message=id_notification, horario=datetime.now() + timedelta(seconds=10))
+    return True
 
 
 

@@ -17,10 +17,10 @@ def updatepriorit(id):
 
 @app.route('/sendnotificaion/<id>')
 def sendnotificaion(id):
-    msg.agendarNotifications(horario=datetime.now()+timedelta(seconds=10),uid_message='yqEenvOBLDPwiX1bwRY8KpfMMmQ2')
+    IA.sendMensageTeste(id)
     return 'sua menssagem veio da ia',200
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    app.run(host="192.168.0.106 ", port=8000)
 

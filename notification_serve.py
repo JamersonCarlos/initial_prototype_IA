@@ -11,16 +11,18 @@ class notification_serve:
         # Define a mensagem para a notificação push
         message = messaging.Message(
             notification = messaging.Notification(
-            title = 'vamos estudar',
+            title = 'vamos estudar<API>',
             body = 'agendamos um horario para você estudar',
-            payload='pomodoro'
+            
             ),
             token=uid_message,   
         )
 
         # Define o horário para o trabalho agendado
         intervalo = horario - datetime.now()
+        print(f"token = "+uid_message)
         if intervalo.total_seconds() > 0.0:
+            print(intervalo.total_seconds())
             threading.Timer(intervalo.total_seconds(), messaging.send, args=[message]).start() 
 
         return message
